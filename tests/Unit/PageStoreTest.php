@@ -48,12 +48,12 @@ final class PageStoreTest extends TestCase
             'sets a cookie'                => [new HtmlResponse('x', 200, ['Set-Cookie' => 'PHPSESSID=abc']), false],
             'no-store'                     => [new HtmlResponse('x', 200, ['Cache-Control' => 'no-store']), false],
             'private'                      => [new HtmlResponse('x', 200, [
-                    'Cache-Control' => 'max-age=0, private',
-                ]), false],
+                'Cache-Control' => 'max-age=0, private',
+            ]), false],
             'no-store in mixed case'       => [new HtmlResponse('x', 200, ['Cache-Control' => 'No-Store']), false],
             'public max-age'               => [new HtmlResponse('x', 200, [
-                    'Cache-Control' => 'public, max-age=60',
-                ]), true],
+                'Cache-Control' => 'public, max-age=60',
+            ]), true],
             'no-cache is still storable'   => [new HtmlResponse('x', 200, ['Cache-Control' => 'no-cache']), true],
             'body that cannot be replayed' => [new Response(new CallbackStream(static fn(): string => 'x')), false],
         ];
