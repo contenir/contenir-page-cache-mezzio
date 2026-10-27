@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebe0ec8024ab718f4c6e74d38fe74a3f",
+    "content-hash": "978fcd1010852a083f8a5f6f9862c7b1",
     "packages": [
         {
             "name": "contenir/contenir-config",
@@ -56,21 +56,23 @@
         },
         {
             "name": "contenir/contenir-page-cache",
-            "version": "v2.0.0-RC1",
+            "version": "v2.0.0-RC2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/contenir/contenir-page-cache.git",
-                "reference": "d200d69731378b8512d1bb0762f1d362a0280fd7"
+                "reference": "337a478850cdbb002541466d133b0aadab4ad771"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/contenir/contenir-page-cache/zipball/d200d69731378b8512d1bb0762f1d362a0280fd7",
-                "reference": "d200d69731378b8512d1bb0762f1d362a0280fd7",
+                "url": "https://api.github.com/repos/contenir/contenir-page-cache/zipball/337a478850cdbb002541466d133b0aadab4ad771",
+                "reference": "337a478850cdbb002541466d133b0aadab4ad771",
                 "shasum": ""
             },
             "require": {
                 "contenir/contenir-config": "^2.1",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+                "contenir/contenir-site-token": "^0.1",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "psr/clock": "^1.0"
             },
             "conflict": {
                 "contenir/cache": "*",
@@ -99,9 +101,62 @@
             "description": "Framework-agnostic page-cache control for Contenir CMS — admin writes a purge signal, Sites read it and flush.",
             "support": {
                 "issues": "https://github.com/contenir/contenir-page-cache/issues",
-                "source": "https://github.com/contenir/contenir-page-cache/tree/v2.0.0-RC1"
+                "source": "https://github.com/contenir/contenir-page-cache/tree/v2.0.0-RC2"
             },
-            "time": "2026-10-07T05:14:23+00:00"
+            "time": "2026-10-27T01:43:32+00:00"
+        },
+        {
+            "name": "contenir/contenir-site-token",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/contenir/contenir-site-token.git",
+                "reference": "8c016bf69206797f4a9fdc4ad82473ee240d6ac0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/contenir/contenir-site-token/zipball/8c016bf69206797f4a9fdc4ad82473ee240d6ac0",
+                "reference": "8c016bf69206797f4a9fdc4ad82473ee240d6ac0",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "psr/clock": "^1.0",
+                "psr/simple-cache": "^1.0 || ^2.0 || ^3.0"
+            },
+            "require-dev": {
+                "contenir/contenir-qa-tools": "0.1.x-dev",
+                "infection/infection": "^0.35.6",
+                "phpunit/phpunit": "^11.5"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "0.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Contenir\\SiteToken\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Signed one-time tokens between the Contenir CMS and a site: compact HS256 tokens with key rotation, a bounded lifetime and single use, shared by the preview and cache protocols.",
+            "keywords": [
+                "JWS",
+                "cms",
+                "contenir",
+                "hmac",
+                "token"
+            ],
+            "support": {
+                "issues": "https://github.com/contenir/contenir-site-token/issues",
+                "source": "https://github.com/contenir/contenir-site-token/tree/v0.1.0"
+            },
+            "time": "2026-10-27T00:37:03+00:00"
         },
         {
             "name": "laminas/laminas-diactoros",

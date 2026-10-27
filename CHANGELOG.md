@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `CacheClearMiddleware`, answering the CMS's signed request to clear the site's caches at
+  `/api/cache` (contenir/contenir-page-cache's clear protocol): it clears the page store and each
+  cache `pagecache.clear.caches` lists, through their own stores, so any backend works and caches
+  sharing a directory keep apart. Configured by `pagecache.clear`; the keys default to the ones
+  previews use. Requires contenir/contenir-site-token 0.1.
+- `PageStore::stamped()` and `PageStore::clear()`: the store keeps a generation, which a clear
+  moves on, and every page is stored under the generation its request began in, so a page rendered
+  from data a clear has since replaced is never served.
+
+### Changed
+
+- Pages are stored under their ticket's key and the store's generation, so entries stored before
+  the upgrade are no longer read; they are misses until the TTL or a clear removes them.
+
 ## [2.0.0-RC1] - 2026-10-07
 
 The first 2.0 pre-release, published as

@@ -21,9 +21,10 @@ final readonly class ConfigProvider
     {
         return [
             'factories' => [
-                PageCacheMiddleware::class => PageCacheMiddlewareFactory::class,
-                CachePolicy::class         => CachePolicyFactory::class,
-                PageStore::class           => PageStoreFactory::class,
+                PageCacheMiddleware::class  => PageCacheMiddlewareFactory::class,
+                CacheClearMiddleware::class => CacheClearMiddlewareFactory::class,
+                CachePolicy::class          => CachePolicyFactory::class,
+                PageStore::class            => PageStoreFactory::class,
             ],
         ];
     }
@@ -48,6 +49,7 @@ final readonly class ConfigProvider
             'bypass'         => null,
             'mutators'       => [],
             'file'           => null,
+            'clear'          => null,
         ];
     }
 

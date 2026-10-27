@@ -12,7 +12,8 @@
     ],
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "contenir/contenir-page-cache": "^2.0",
+        "contenir/contenir-page-cache": "^2.0.0-RC2",
+        "contenir/contenir-site-token": "^0.1",
         "contenir/contenir-config": "^2.1",
         "laminas/laminas-diactoros": "^3.0",
         "psr/clock": "^1.0",

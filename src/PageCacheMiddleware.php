@@ -17,9 +17,10 @@ use function strtoupper;
  * Full-page output cache, controlled by the Contenir admin.
  *
  * The policy decides whether this request may use the cache and under which
- * key (reading the admin's state afresh on every request); the store serves
- * the page from the cache, or the handler runs and the store keeps its
- * response when it is cacheable. A HEAD request is answered from the GET's
+ * key (reading the admin's state afresh on every request), stamped with the
+ * store's generation before anything renders; the store serves the page from
+ * the cache, or the handler runs and the store keeps its response when it is
+ * cacheable. A HEAD request is answered from the GET's
  * entry, but a HEAD miss is never stored, since its body is empty.
  *
  * Every response the middleware returns then has the veto header removed and
@@ -66,6 +67,8 @@ final readonly class PageCacheMiddleware implements MiddlewareInterface
         if (null === $ticket) {
             return $this->finish($handler->handle($request), $request, CacheResult::Bypass);
         }
+
+        $ticket = $this->store->stamped($ticket);
 
         $isGet = 'GET' === strtoupper($request->getMethod());
         $hit   = $this->store->fetch($ticket);
