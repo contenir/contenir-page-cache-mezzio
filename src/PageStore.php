@@ -32,6 +32,8 @@ final readonly class PageStore
 {
     private const array CACHEABLE_STATUSES = [200, 203, 301, 308];
 
+    private PageGeneration $generation;
+
     /**
      * @param bool $perItemTtl Pass a TTL with every set(). Only for caches that
      *     honour per-item TTLs.
@@ -46,7 +48,18 @@ final readonly class PageStore
         private bool $perItemTtl = false,
         private int $ttl = 300,
         private string $cacheControl = 'no-cache',
-    ) {}
+    ) {
+        $this->generation = new PageGeneration($cache);
+    }
+
+    /**
+     * Empties the store and moves its generation on. True when both went
+     * through.
+     */
+    public function clear(): bool
+    {
+        return $this->generation->clear();
+    }
 
     /**
      * The stored page, ready to send (with `Age`, a Cache-Control when it had
@@ -78,6 +91,14 @@ final readonly class PageStore
     }
 
     /**
+     * The store's generation: 0 until it is first cleared.
+     */
+    public function generation(): int
+    {
+        return $this->generation->current();
+    }
+
+    /**
      * Stores the response when it is cacheable; true when it was stored.
      *
      * Cacheable means: status 200, 203, 301 or 308; a replayable body; no
@@ -105,6 +126,17 @@ final readonly class PageStore
         } catch (CacheException|JsonException) {
             return false;
         }
+    }
+
+    /**
+     * $ticket for the store's current generation, which a request takes once,
+     * before its page is rendered, and fetches and saves with, so a page
+     * rendered before a clear and saved after it is stored where no later
+     * request looks.
+     */
+    public function stamped(CacheTicket $ticket): CacheTicket
+    {
+        return new CacheTicket("{$ticket->key}_{$this->generation->current()}", $ticket->ttl);
     }
 
     private function isCacheable(ResponseInterface $response): bool

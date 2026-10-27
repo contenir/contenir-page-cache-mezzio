@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Contenir\PageCache\Mezzio\Tests\Unit;
 
 use Contenir\PageCache\Mezzio\ActiveOptions;
+use Contenir\PageCache\Mezzio\CacheClearMiddleware;
+use Contenir\PageCache\Mezzio\CacheClearMiddlewareFactory;
 use Contenir\PageCache\Mezzio\CachePolicy;
 use Contenir\PageCache\Mezzio\CachePolicyFactory;
 use Contenir\PageCache\Mezzio\ConfigProvider;
@@ -50,9 +52,10 @@ final class ConfigProviderTest extends TestCase
         static::assertSame(
             [
                 'factories' => [
-                    PageCacheMiddleware::class => PageCacheMiddlewareFactory::class,
-                    CachePolicy::class         => CachePolicyFactory::class,
-                    PageStore::class           => PageStoreFactory::class,
+                    PageCacheMiddleware::class  => PageCacheMiddlewareFactory::class,
+                    CacheClearMiddleware::class => CacheClearMiddlewareFactory::class,
+                    CachePolicy::class          => CachePolicyFactory::class,
+                    PageStore::class            => PageStoreFactory::class,
                 ],
             ],
             (new ConfigProvider())->getDependencies(),
@@ -73,9 +76,10 @@ final class ConfigProviderTest extends TestCase
         static::assertSame(
             [
                 'factories' => [
-                    PageCacheMiddleware::class => PageCacheMiddlewareFactory::class,
-                    CachePolicy::class         => CachePolicyFactory::class,
-                    PageStore::class           => PageStoreFactory::class,
+                    PageCacheMiddleware::class  => PageCacheMiddlewareFactory::class,
+                    CacheClearMiddleware::class => CacheClearMiddlewareFactory::class,
+                    CachePolicy::class          => CachePolicyFactory::class,
+                    PageStore::class            => PageStoreFactory::class,
                 ],
             ],
             (new ConfigProvider())()['dependencies'],
@@ -97,6 +101,7 @@ final class ConfigProviderTest extends TestCase
                 'bypass'         => null,
                 'mutators'       => [],
                 'file'           => null,
+                'clear'          => null,
             ],
             (new ConfigProvider())->getPageCacheDefaults(),
         );

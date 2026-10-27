@@ -92,6 +92,7 @@ $app->pipe(ErrorHandler::class);
 $app->pipe(ServerUrlMiddleware::class);
 $app->pipe(MaintenanceMiddleware::class);   // a 503 must never be cached, or served from cache
 $app->pipe(SessionMiddleware::class);       // if the site has one: authenticated visitors then bypass
+$app->pipe(\Contenir\PageCache\Mezzio\CacheClearMiddleware::class);  // the CMS's clear, at /api/cache
 $app->pipe(\Contenir\PageCache\Mezzio\PageCacheMiddleware::class);
 $app->pipe(RouteMiddleware::class);
 // … ImplicitHeadMiddleware, DispatchMiddleware, NotFoundHandler
@@ -103,6 +104,35 @@ $app->pipe(RouteMiddleware::class);
   there to recognise a logged-in user. Without it, the session cookie alone
   stands in for the session.
 - **Before routing**, so a hit skips routing and dispatch altogether.
+- **The clear before the page cache**, so the CMS's request to clear the
+  site's caches is answered before anything is read from them.
+
+## Clearing from the CMS
+
+The CMS clears the site's caches by posting a signed token to the site's
+fixed `/api/cache` (the protocol is contenir/contenir-page-cache's
+`Clear\ClearProtocol`). `CacheClearMiddleware` checks it, then clears the page
+store and each other cache the site lists, through their own stores: a PSR-16
+cache's `clear()`, or a laminas-cache storage's own namespace only, so caches
+sharing a directory are left alone. The page store's generation moves on with
+it, so a page rendered from old data while the clear lands is never served.
+
+```php
+'pagecache' => [
+    'clear' => [
+        'keys'   => 'contenir_preview',     // the config holding issuer, audience, secrets and sign_with
+        'caches' => ['workflow'],           // other cache services to clear, besides the pages
+        'replay' => ['cache' => 'Shared'],  // a PSR-16 service shared by servers; or
+                                            // ['directory' => '/var/app/clear'], default the temp dir
+    ],
+],
+```
+
+The keys default to the ones previews use, so a site holds one secret for
+both. With no `clear` configured, the middleware passes everything through and
+the endpoint does not exist. It answers `204` once everything is cleared,
+`500` naming what could not be, `405` to anything but a POST, and `400`,
+`401` or `409` to a refused token.
 
 
 ## Documentation
@@ -120,18 +150,20 @@ $app->pipe(RouteMiddleware::class);
 
 | Type | Purpose |
 |------|---------|
-| `ConfigProvider` | Registers the three factories below and the `pagecache` defaults (`getDependencies()`, `getPageCacheDefaults()`). |
+| `ConfigProvider` | Registers the four factories below and the `pagecache` defaults (`getDependencies()`, `getPageCacheDefaults()`). |
 | `PageCacheMiddleware` | The PSR-15 middleware: `(CachePolicy $policy, PageStore $store, list<ResponseMutatorInterface> $mutators = [])`. `veto(ResponseInterface)` marks a response as not to be stored; `VETO_HEADER` and `STATUS_HEADER` name the headers it uses. |
 | `CachePolicy` | Decides whether a request may use the cache and under which key: `ticketFor(ServerRequestInterface): ?CacheTicket`. `USER_ATTRIBUTE` is the request attribute that marks a logged-in user. |
 | `CacheTicket` | The key and per-path TTL one request reads and writes. |
-| `PageStore` | Reads and writes pages in a PSR-16 cache: `fetch(CacheTicket)`, `save(CacheTicket, ResponseInterface)`. |
+| `PageStore` | Reads and writes pages in a PSR-16 cache: `fetch(CacheTicket)`, `save(CacheTicket, ResponseInterface)`, `stamped(CacheTicket)` for the store's current generation, and `clear()`, which empties it and moves the generation on. |
+| `CacheClearMiddleware` | Answers the CMS's signed clear at `/api/cache`: `(?ClearVerifier $verifier, PageStore $store, array<string, CacheInterface> $caches = [])`. |
 | `CacheResult` | `Hit`, `Miss` or `Bypass`, handed to every mutator. |
 | `ResponseMutatorInterface` | The extension point for per-request changes after storage. |
 | `SystemClock` | The PSR-20 wall clock `PageStore` uses by default. |
 | `Contenir\PageCache\Repository\LayeredFileRepository` | From contenir-page-cache: the admin's file laid over the site's defaults (a `CacheControlRepositoryInterface`). |
-| `PageCacheMiddlewareFactory`, `CachePolicyFactory`, `PageStoreFactory` | Build the services above from `config['pagecache']`; invalid configuration throws `RuntimeException`. `CachePolicyFactory::DEFAULT_FILE` is the admin file's path relative to the working directory. |
+| `PageCacheMiddlewareFactory`, `CachePolicyFactory`, `PageStoreFactory`, `CacheClearMiddlewareFactory` | Build the services above from `config['pagecache']`; invalid configuration throws `RuntimeException`. `CachePolicyFactory::DEFAULT_FILE` is the admin file's path relative to the working directory. |
 
-`ActiveOptions`, `CacheKeyGenerator`, `PageCacheConfig`, `PageCodec`,
+`ActiveOptions`, `CacheKeyGenerator`, `ClearKeys`, `ClearOptions`,
+`ClearSetting`, `PageCacheConfig`, `PageCodec`, `PageGeneration`,
 `SessionInspector` and `StoredResponse` are internal.
 
 ## Development

@@ -50,23 +50,22 @@ integration suite runs against a real Filesystem storage to prove it.
 
 ## Purging
 
-Purging is not the middleware's job: the admin talks to the storage directly.
+The CMS clears a site's caches by posting a signed request to the site's
+`/api/cache`, which `CacheClearMiddleware` answers (see the README's
+"Clearing from the CMS"). The site clears its own stores through their own
+APIs, so any backend works, Redis included, and caches sharing a directory
+keep apart by namespace. The page store's generation moves on with each
+clear, so a page rendered from the old data while the clear lands is stored
+where no later request looks.
 
-- **Clear cache** (the admin's `ClearCache` registrar, run after many admin
-  saves) empties every file under the site's `data/cache`. Pages stored in a
-  Filesystem storage below `data/cache` are purged by it; the middleware
-  treats the missing entries as misses.
-- **Page Cache → Clear cache** (the `PurgeCacheHandler` operation) reads
-  `pagecache.cache` from `config/autoload/pagecache.global.php`, finds that
-  service under `caches` in `config/autoload/cache.global.php`, builds the same
-  Filesystem storage (a relative `cache_dir` is resolved against the site
-  root) and flushes it. It supports only the Filesystem adapter and only that
-  `caches` layout.
+Sites that don't pipe the middleware yet are purged the old way, which only
+works for a laminas-cache Filesystem storage under `data/cache`:
 
-So for both buttons to work, keep the page cache in a laminas-cache Filesystem
-storage under `data/cache`, declared as shown under [Storage](#storage). A
-different backend (Redis, a PSR-16 cache built by a custom factory) still
-caches, but the admin cannot purge it; the TTL and the master switch are then
-the only controls.
+- **Clear cache** (the admin's `ClearCache` registrar) empties every file
+  under the site's `data/cache`; the middleware treats the missing entries as
+  misses.
+- **Page Cache → Clear cache** (the `PurgeCacheHandler` operation) builds the
+  Filesystem storage `pagecache.cache` names from the site's config and flushes
+  it.
 
 [Back to the README](../README.md)
