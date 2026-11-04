@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- The CMS's clear at `/api/cache` now removes the site's cached merged configuration
+  (`config['config_cache_path']`, the file laminas-config-aggregator writes) through the new
+  `ConfigCacheFile`, and drops it from OPcache. Settings the CMS saves to `config/autoload` were
+  otherwise never read by a site that caches its configuration, since the CMS stopped emptying
+  `data/cache` itself once the site answered the clear. A file that can't be removed is named
+  `config` in the `500`.
+
 ## [2.0.0-RC2] - 2026-10-27
 
 ### Added

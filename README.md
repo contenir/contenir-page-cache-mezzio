@@ -128,11 +128,15 @@ it, so a page rendered from old data while the clear lands is never served.
 ],
 ```
 
+When the site caches its merged configuration under `config_cache_path` (as
+the Mezzio skeleton does), the clear removes that file too, so settings the CMS
+wrote to `config/autoload` are read on the next request.
+
 The keys default to the ones previews use, so a site holds one secret for
 both. With no `clear` configured, the middleware passes everything through and
 the endpoint does not exist. It answers `204` once everything is cleared,
-`500` naming what could not be, `405` to anything but a POST, and `400`,
-`401` or `409` to a refused token.
+`500` naming what could not be (`config`, `pages` or a listed cache), `405` to
+anything but a POST, and `400`, `401` or `409` to a refused token.
 
 
 ## Documentation
@@ -155,7 +159,8 @@ the endpoint does not exist. It answers `204` once everything is cleared,
 | `CachePolicy` | Decides whether a request may use the cache and under which key: `ticketFor(ServerRequestInterface): ?CacheTicket`. `USER_ATTRIBUTE` is the request attribute that marks a logged-in user. |
 | `CacheTicket` | The key and per-path TTL one request reads and writes. |
 | `PageStore` | Reads and writes pages in a PSR-16 cache: `fetch(CacheTicket)`, `save(CacheTicket, ResponseInterface)`, `stamped(CacheTicket)` for the store's current generation, and `clear()`, which empties it and moves the generation on. |
-| `CacheClearMiddleware` | Answers the CMS's signed clear at `/api/cache`: `(?ClearVerifier $verifier, PageStore $store, array<string, CacheInterface> $caches = [])`. |
+| `CacheClearMiddleware` | Answers the CMS's signed clear at `/api/cache`: `(?ClearVerifier $verifier, PageStore $store, array<string, CacheInterface> $caches = [], ?ConfigCacheFile $config = null)`. |
+| `ConfigCacheFile` | The site's cached merged configuration, which `clear()` removes (and drops from OPcache). |
 | `CacheResult` | `Hit`, `Miss` or `Bypass`, handed to every mutator. |
 | `ResponseMutatorInterface` | The extension point for per-request changes after storage. |
 | `SystemClock` | The PSR-20 wall clock `PageStore` uses by default. |

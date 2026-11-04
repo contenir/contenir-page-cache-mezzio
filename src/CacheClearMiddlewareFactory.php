@@ -18,13 +18,15 @@ use RuntimeException;
 
 use function get_debug_type;
 use function is_array;
+use function is_string;
 use function sprintf;
 use function sys_get_temp_dir;
 
 /**
  * Builds the cache clear endpoint from `config['pagecache']['clear']` (see ClearOptions), with
  * the page store and each other cache it lists: a PSR-16 cache as it is, a laminas-cache storage
- * wrapped so that only its own namespace is cleared.
+ * wrapped so that only its own namespace is cleared. When the site names a configuration cache
+ * file (`config['config_cache_path']`, as the Mezzio skeleton does), a clear removes it too.
  *
  * @api
  */
@@ -48,6 +50,17 @@ final readonly class CacheClearMiddlewareFactory
                 get_debug_type($service),
             )),
         };
+    }
+
+    /**
+     * @param array<array-key, mixed> $config
+     */
+    private static function configCache(array $config): ?ConfigCacheFile
+    {
+        /** @var mixed $path */
+        $path = $config[ConfigCacheFile::PATH_KEY] ?? null;
+
+        return is_string($path) && '' !== $path ? new ConfigCacheFile($path) : null;
     }
 
     /**
@@ -79,7 +92,8 @@ final readonly class CacheClearMiddlewareFactory
     {
         /** @var mixed $config */
         $config  = $container->has('config') ? $container->get('config') : null;
-        $options = ClearOptions::fromAppConfig(is_array($config) ? $config : []);
+        $config  = is_array($config) ? $config : [];
+        $options = ClearOptions::fromAppConfig($config);
         $store   = (new PageStoreFactory())($container);
 
         if (null === $options) {
@@ -97,6 +111,7 @@ final readonly class CacheClearMiddlewareFactory
             new ClearVerifier($options->keys, $clock, self::replay($container, $options, $clock)),
             $store,
             $caches,
+            self::configCache($config),
         );
     }
 }
