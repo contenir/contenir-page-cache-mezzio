@@ -9,6 +9,8 @@ use function function_exists;
 use function is_file;
 use function is_writable;
 use function opcache_invalidate;
+use function restore_error_handler;
+use function set_error_handler;
 use function unlink;
 
 /**
@@ -29,6 +31,25 @@ final readonly class ConfigCacheFile
     ) {}
 
     /**
+     * Drops the file's compiled copy, quietly where opcache.restrict_api forbids the call, so a
+     * clear never fails over it.
+     */
+    private static function invalidateOpcache(string $path): void
+    {
+        if (! function_exists('opcache_invalidate')) {
+            return;
+        }
+
+        set_error_handler(static fn(): bool => true);
+
+        try {
+            opcache_invalidate($path, force: true);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
      * Removes the file, and its compiled copy from OPcache, so the next request neither finds the
      * old file nor runs the old one in place of the file merged next; false when the file is there
      * but cannot be removed.
@@ -43,9 +64,7 @@ final readonly class ConfigCacheFile
             return false;
         }
 
-        if (function_exists('opcache_invalidate')) {
-            opcache_invalidate($this->path, force: true);
-        }
+        self::invalidateOpcache($this->path);
 
         return true;
     }
