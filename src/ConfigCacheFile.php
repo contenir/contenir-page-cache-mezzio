@@ -36,16 +36,14 @@ final readonly class ConfigCacheFile
      */
     private static function invalidateOpcache(string $path): void
     {
-        if (! function_exists('opcache_invalidate')) {
-            return;
-        }
+        if (function_exists('opcache_invalidate')) {
+            set_error_handler(static fn(): bool => true);
 
-        set_error_handler(static fn(): bool => true);
-
-        try {
-            opcache_invalidate($path, force: true);
-        } finally {
-            restore_error_handler();
+            try {
+                opcache_invalidate($path, force: true);
+            } finally {
+                restore_error_handler();
+            }
         }
     }
 

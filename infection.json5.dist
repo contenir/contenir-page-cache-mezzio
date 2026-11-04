@@ -20,7 +20,7 @@
         "MethodCallRemoval": {
             "ignoreSourceCodeByRegex": ["self::invalidateOpcache\\(\\$this->path\\);"]
         },
-        "LogicalNot": {
+        "IfNegation": {
             "ignore": ["Contenir\\PageCache\\Mezzio\\ConfigCacheFile::invalidateOpcache"]
         },
         "FunctionCallRemoval": {
