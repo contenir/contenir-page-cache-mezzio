@@ -21,9 +21,10 @@ use function implode;
 
 /**
  * Answers the CMS's request to clear the site's caches at the protocol's fixed `/api/cache`:
- * checks the signed token in its Authorization header, then clears the page store, moving its
- * generation on, and each other cache the site lists, through their own stores. Every other
- * request passes through. Pipe it before the page cache and routing.
+ * checks the signed token in its Authorization header, then removes the site's cached
+ * configuration, so settings the CMS saved are read, clears the page store, moving its generation
+ * on, and each other cache the site lists, through their own stores. Every other request passes
+ * through. Pipe it before the page cache and routing.
  *
  * Answers `204` once everything is cleared, `500` naming what could not be, `405` to anything
  * but a POST, and the protocol's status and reason to a refused token. With no `pagecache.clear`
@@ -36,6 +37,9 @@ final readonly class CacheClearMiddleware implements MiddlewareInterface
     /** The name a failure to clear the page store is reported by. */
     public const string PAGES = 'pages';
 
+    /** The name a failure to remove the cached configuration is reported by. */
+    public const string CONFIG = 'config';
+
     private const array NO_STORE = ['Cache-Control' => 'no-store'];
 
     /**
@@ -45,6 +49,7 @@ final readonly class CacheClearMiddleware implements MiddlewareInterface
         private ?ClearVerifier $verifier,
         private PageStore $store,
         private array $caches = [],
+        private ?ConfigCacheFile $config = null,
     ) {}
 
     #[Override]
@@ -72,13 +77,18 @@ final readonly class CacheClearMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Clears every cache, whichever fail, and names those that did.
+     * Clears every cache, whichever fail, and names those that did. The configuration goes first,
+     * so a page rendered once its store is cleared is rendered from the settings just saved.
      *
      * @return list<string>
      */
     private function clear(): array
     {
-        $failed = $this->store->clear() ? [] : [self::PAGES];
+        $failed = null === $this->config || $this->config->clear() ? [] : [self::CONFIG];
+        if (! $this->store->clear()) {
+            $failed[] = self::PAGES;
+        }
+
         foreach ($this->caches as $name => $cache) {
             try {
                 $cleared = $cache->clear();
